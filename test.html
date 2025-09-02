@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Genetics Quiz with Timer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px auto;
+            max-width: 700px;
+            line-height: 1.6;
+            color: #333;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        #timer {
+            font-size: 22px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        ol {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        input[type="submit"] {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            transition: background 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background: #2980b9;
+        }
+
+        #result {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Genetics Quiz</h1>
+    <div id="timer">Time left: 10:00</div>
+    <form id="quizForm">
+        <ol>
+            <li>
+                <p>Which of the following is a recessive allele?</p>
+                <label><input type="radio" name="q1" value="A" /> A</label>
+                <label><input type="radio" name="q1" value="B" /> a</label>
+                <label><input type="radio" name="q1" value="C" /> AA</label>
+                <label><input type="radio" name="q1" value="D" /> Aa</label>
+            </li>
+            <li>
+                <p>Homozygous means having:</p>
+                <label><input type="radio" name="q2" value="A" /> Two identical alleles</label>
+                <label><input type="radio" name="q2" value="B" /> Two different alleles</label>
+                <label><input type="radio" name="q2" value="C" /> Only dominant alleles</label>
+                <label><input type="radio" name="q2" value="D" /> Only recessive alleles</label>
+            </li>
+            <li>
+                <p>The complete set of DNA in an organism is called:</p> <label><input type="radio" name="q3"
+                        value="A" /> Gene</label>
+                <label><input type="radio" name="q3" value="B" /> Chromosome</label>
+                <label><input type="radio" name="q3" value="C" /> Genome</label>
+                <label><input type="radio" name="q3" value="D" /> Allele</label>
+            </li>
+            <li>
+                <p>If a heterozygous tall pea plant (Tt) is crossed with a short pea plant (tt), what is the probability
+                    of the offspring being tall?</p>
+                <label><input type="radio" name="q4" value="A" /> 25%</label>
+                <label><input type="radio" name="q4" value="B" /> 50%</label>
+                <label><input type="radio" name="q4" value="C" /> 75%</label>
+                <label><input type="radio" name="q4" value="D" /> 100%</label>
+            </li>
+            <li>
+                <p>Which statement correctly describes co-dominance and incomplete dominance?</p>
+                <label><input type="radio" name="q5" value="A" /> Co-dominance: allele blend; incomplete dominance: both
+                    alleles visible</label>
+                <label><input type="radio" name="q5" value="B" /> Co-dominance: alleles visible; incomplete dominance:
+                    alleles blend</label>
+                <label><input type="radio" name="q5" value="C" /> Co-dominance: recessive allele hides; incomplete
+                    dominance: dominant allele hides</label> <label><input type="radio" name="q5" value="D" />
+                    Co-dominance: only one allele expressed; incomplete dominance: only one allele expressed</label>
+            </li>
+        </ol>
+        <input type="submit" value="Submit Quiz" />
+    </form>
+
+    <h2 id="result"></h2>
+
+    <script>
+        let timeLeft = 600;
+        const timerDisplay = document.getElementById("timer");
+
+        const countdown = setInterval(() => {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            timerDisplay.textContent = Time left: minutes: { seconds };
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                timerDisplay.textContent = "Time's up!";
+                document.getElementById("quizForm").requestSubmit();
+            }
+            timeLeft--;
+        }, 1000);
+
+        document.getElementById("quizForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const correctAnswers = {
+                q1: "B",
+                q2: "A",
+                q3: "C",
+                q4: "B",
+                q5: "B"
+            };
+
+            let score = 0;
+            let total = Object.keys(correctAnswers).length;
+
+            for (let q in correctAnswers) {
+                let selected = document.querySelector(input[name = "${q}"]: checked); if (selected        selected.value === correctAnswers[q])
+        score++;
+
+
+        const showOutOf100 = true;
+        let finalScore = showOutOf100 ? (score * 20) : score;
+        let maxScore = showOutOf100 ? 100 : total;
+
+        document.getElementById("result").innerText = You scored{ finalScore }/${maxScore};
+        clearInterval(countdown);
+    );
+    </script>
+</body>
+
+</html>

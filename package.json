@@ -1,0 +1,29 @@
+{
+  "name": "edubuddy-project",
+  "version": "1.0.0",
+  "description": "PLP Hackathon Project worth KSH 4000",
+  "homepage": "https://github.com/adonis-dave/Edubuddy-Project#readme",
+  "bugs": {
+    "url": "https://github.com/adonis-dave/Edubuddy-Project/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adonis-dave/Edubuddy-Project.git"
+  },
+  "license": "ISC",
+  "author": "David Denis and Moureen",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.4",
+    "nodemon": "^3.1.10"
+  }
+}

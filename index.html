@@ -1,0 +1,475 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduBuddy - Learn Anytime, Even Offline</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .splash-screen { 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            background-color: #007bff; 
+            color: white; 
+            transition: opacity 1s; 
+        }
+        .splash-screen.hidden { opacity: 0; display: none; }
+        .navbar-brand { font-weight: bold; }
+        .subject-card, .quiz-card { cursor: pointer; }
+        .downloaded-tick::after { content: '✓'; color: green; margin-left: 10px; }
+        .offline-warning { display: none; color: red; }
+        .lesson-content { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <h1>EduBuddy</h1>
+        <p>Learn anytime, even offline</p>
+    </div>
+
+    <!-- Login/Register Section -->
+    <div id="authSection" class="container mt-5 d-none">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-center">Login / Register</h3>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username/Email</label>
+                            <input type="text" class="form-control" id="username" placeholder="Enter username or email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Enter password">
+                        </div>
+                        <button class="btn btn-primary w-100" onclick="login()">Login</button>
+                        <button class="btn btn-secondary w-100 mt-2" onclick="register()">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until login) -->
+    <div id="mainApp" class="d-none">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">EduBuddy</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('dashboard')">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('subjects')">Subjects</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('quizzes')">Quizzes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('downloads')">Downloads</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('profile')">Profile</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="container mt-4">
+            <h2>Dashboard</h2>
+            <div class="row">
+                <div class="col-md-3"><div class="card subject-card" onclick="showSection('subjects')"><div class="card-body">Subjects</div></div></div>
+                <div class="col-md-3"><div class="card quiz-card" onclick="showSection('quizzes')"><div class="card-body">Quizzes</div></div></div>
+                <div class="col-md-3"><div class="card" onclick="showSection('downloads')"><div class="card-body">Downloads</div></div></div>
+                <div class="col-md-3"><div class="card"><div class="card-body"><button class="btn btn-primary" onclick="checkUpdates()">Check for Updates</button><p class="offline-warning">You are offline!</p></div></div></div>
+            </div>
+        </div>
+
+        <!-- Subjects -->
+        <div id="subjects" class="container mt-4 d-none">
+            <h2>Subjects</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Biology</h4>
+                    <ul class="list-group">
+                        <li class="list-group-item" id="genetics" onclick="viewLesson('Genetics')">Genetics <button class="btn btn-sm btn-outline-primary float-end" onclick="event.stopPropagation(); downloadLesson('Genetics')">Download</button></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4>Geography</h4>
+                    <ul class="list-group">
+                        <li class="list-group-item" id="rainFormation" onclick="viewLesson('RainFormation')">Rain Formation <button class="btn btn-sm btn-outline-primary float-end" onclick="event.stopPropagation(); downloadLesson('RainFormation')">Download</button></li>
+                    </ul>
+                </div>
+            </div>
+            <div id="lessonContent" class="lesson-content card mt-4 d-none">
+                <div class="card-body">
+                    <h3 id="lessonTitle"></h3>
+                    <div id="lessonBody"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quizzes -->
+        <div id="quizzes" class="container mt-4 d-none">
+            <h2>Quizzes</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Biology</h4>
+                    <ul class="list-group">
+                        <li class="list-group-item" onclick="startQuiz('Biology')">Genetics Quiz</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4>Geography</h4>
+                    <ul class="list-group">
+                        <li class="list-group-item" onclick="startQuiz('Geography')">Rain Formation Quiz</li>
+                    </ul>
+                </div>
+            </div>
+            <div id="quizSection" class="mt-4 d-none">
+                <h3 id="quizTitle"></h3>
+                <div id="quizQuestions"></div>
+                <button class="btn btn-primary mt-3" onclick="submitQuiz()">Submit</button>
+                <div id="quizFeedback" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Downloads -->
+        <div id="downloads" class="container mt-4 d-none">
+            <h2>Downloads</h2>
+            <ul id="downloadList" class="list-group"></ul>
+        </div>
+
+        <!-- Profile -->
+        <div id="profile" class="container mt-4 d-none">
+            <h2>Profile & Settings</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5>User Info</h5>
+                    <p>Name: <span id="userName"></span></p>
+                    <p>Grade/Class: <span id="userGrade"></span></p>
+                    <h5>Storage Management</h5>
+                    <button class="btn btn-danger" onclick="clearDownloads()">Clear All Downloads</button>
+                    <button class="btn btn-secondary mt-2" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Base URL for backend API (adjust if needed)
+        const API_BASE = 'http://localhost:3000/api';
+
+        // Simulate offline storage
+        let userData = JSON.parse(localStorage.getItem('userData')) || {};
+        let downloads = JSON.parse(localStorage.getItem('downloads')) || [];
+        let lessons = JSON.parse(localStorage.getItem('lessons')) || {};
+        let quizzesData = JSON.parse(localStorage.getItem('quizzes')) || {};
+        let isOffline = !navigator.onLine;
+
+        // Splash screen
+        setTimeout(() => {
+            document.getElementById('splashScreen').classList.add('hidden');
+            document.getElementById('authSection').classList.remove('d-none');
+            if (userData.username) showMainApp();
+        }, 2000);
+
+        // Login
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username && password) {
+                try {
+                    const response = await fetch(`${API_BASE}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        userData = { id: data.userId, username, grade: data.grade };
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                        showMainApp();
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    alert('Login failed. Check connection.');
+                }
+            } else {
+                alert("Please enter username and password");
+            }
+        }
+
+        // Register
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username && password) {
+                try {
+                    const response = await fetch(`${API_BASE}/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password, grade: 'Grade 10' }) // Mock grade
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Registered successfully. Please login.');
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    alert('Registration failed. Check connection.');
+                }
+            } else {
+                alert("Please enter username and password");
+            }
+        }
+
+        function showMainApp() {
+            document.getElementById('authSection').classList.add('d-none');
+            document.getElementById('mainApp').classList.remove('d-none');
+            showSection('dashboard');
+            updateProfile();
+            updateDownloads();
+            checkDownloadedLessons();
+        }
+
+        // Navigation
+        function showSection(section) {
+            document.querySelectorAll('#mainApp > div').forEach(div => div.classList.add('d-none'));
+            document.getElementById(section).classList.remove('d-none');
+            if (section === 'quizzes') document.getElementById('quizSection').classList.add('d-none');
+            if (section === 'subjects') document.getElementById('lessonContent').classList.add('d-none');
+        }
+
+        // Subjects and Downloads
+        async function downloadLesson(topic) {
+            if (isOffline) {
+                alert("You are offline. Cannot download new lessons.");
+                return;
+            }
+            if (!downloads.includes(topic)) {
+                try {
+                    const response = await fetch(`${API_BASE}/topics/${topic}?userId=${userData.id}`);
+                    const data = await response.json();
+                    if (data.content) {
+                        downloads.push(topic);
+                        lessons[topic] = data.content;
+                        localStorage.setItem('downloads', JSON.stringify(downloads));
+                        localStorage.setItem('lessons', JSON.stringify(lessons));
+                        document.getElementById(topic.toLowerCase()).classList.add('downloaded-tick');
+                        updateDownloads();
+                    } else {
+                        alert('Lesson not found.');
+                    }
+                } catch (error) {
+                    alert('Download failed. Check connection.');
+                }
+            }
+        }
+
+        function viewLesson(topic) {
+            if (!downloads.includes(topic)) {
+                alert("Please download the lesson first.");
+                return;
+            }
+            document.getElementById('lessonContent').classList.remove('d-none');
+            document.getElementById('lessonTitle').textContent = topic;
+            document.getElementById('lessonBody').innerHTML = lessons[topic];
+        }
+
+        function checkDownloadedLessons() {
+            downloads.forEach(topic => {
+                const el = document.getElementById(topic.toLowerCase());
+                if (el) {
+                    el.classList.add('downloaded-tick');
+                }
+            });
+        }
+
+        function updateDownloads() {
+            const downloadList = document.getElementById('downloadList');
+            downloadList.innerHTML = '';
+            downloads.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('list-group-item');
+                li.textContent = `${item} (PDF)`;
+                li.onclick = () => viewLesson(item);
+                downloadList.appendChild(li);
+            });
+        }
+
+        async function clearDownloads() {
+            downloads = [];
+            lessons = {};
+            localStorage.setItem('downloads', JSON.stringify([]));
+            localStorage.setItem('lessons', JSON.stringify({}));
+            updateDownloads();
+            document.querySelectorAll('.downloaded-tick').forEach(el => el.classList.remove('downloaded-tick'));
+            if (!isOffline) {
+                try {
+                    await fetch(`${API_BASE}/clear-downloads`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: userData.id })
+                    });
+                } catch (error) {
+                    console.error('Clear downloads sync failed.');
+                }
+            }
+        }
+
+        // Quizzes
+        let currentQuiz = null;
+        async function startQuiz(subject) {
+            if (!quizzesData[subject]) {
+                if (isOffline) {
+                    alert("You are offline. Cannot load quiz.");
+                    return;
+                }
+                try {
+                    const response = await fetch(`${API_BASE}/quizzes/${subject}`);
+                    const data = await response.json();
+                    quizzesData[subject] = data.questions;
+                    localStorage.setItem('quizzes', JSON.stringify(quizzesData));
+                } catch (error) {
+                    alert('Quiz load failed. Check connection.');
+                    return;
+                }
+            }
+            currentQuiz = quizzesData[subject];
+            document.getElementById('quizSection').classList.remove('d-none');
+            document.getElementById('quizTitle').textContent = `${subject} Quiz`;
+            const quizQuestions = document.getElementById('quizQuestions');
+            quizQuestions.innerHTML = '';
+            currentQuiz.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.classList.add('mb-3');
+                div.innerHTML = `
+                    <p>${q.question}</p>
+                    ${q.options.map(opt => `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q${index}" value="${opt}">
+                            <label class="form-check-label">${opt}</label>
+                        </div>
+                    `).join('')}
+                `;
+                quizQuestions.appendChild(div);
+            });
+        }
+
+        async function submitQuiz() {
+            let score = 0;
+            currentQuiz.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selected && selected.value === q.answer) score++;
+            });
+            document.getElementById('quizFeedback').innerHTML = `Score: ${score}/${currentQuiz.length}`;
+            if (!isOffline) {
+                try {
+                    await fetch(`${API_BASE}/quiz-results`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: userData.id, quizTitle: document.getElementById('quizTitle').textContent, score, total: currentQuiz.length })
+                    });
+                } catch (error) {
+                    console.error('Quiz result sync failed.');
+                }
+            }
+        }
+
+        // Profile
+        function updateProfile() {
+            document.getElementById('userName').textContent = userData.username || "N/A";
+            document.getElementById('userGrade').textContent = userData.grade || "N/A";
+        }
+
+        // Updates
+        async function checkUpdates() {
+            if (isOffline) {
+                document.querySelector('.offline-warning').style.display = 'block';
+            } else {
+                try {
+                    const response = await fetch(`${API_BASE}/sync?userId=${userData.id}`);
+                    const data = await response.json();
+                    // Update localStorage with new/updated lessons and quizzes
+                    Object.assign(lessons, data.lessons);
+                    Object.assign(quizzesData, data.quizzes);
+                    localStorage.setItem('lessons', JSON.stringify(lessons));
+                    localStorage.setItem('quizzes', JSON.stringify(quizzesData));
+                    // Update downloads if needed
+                    downloads = data.downloads;
+                    localStorage.setItem('downloads', JSON.stringify(downloads));
+                    checkDownloadedLessons();
+                    updateDownloads();
+                    alert('Content synced successfully!');
+                } catch (error) {
+                    alert('Sync failed. Check connection.');
+                }
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('userData');
+            window.location.reload();
+        }
+
+        // Offline detection
+        window.addEventListener('online', () => {
+            isOffline = false;
+            document.querySelector('.offline-warning').style.display = 'none';
+            // Optional: Auto-sync when back online
+            if (userData.id) checkUpdates();
+        });
+        window.addEventListener('offline', () => {
+            isOffline = true;
+            document.querySelector('.offline-warning').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
