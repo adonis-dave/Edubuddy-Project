@@ -1,11 +1,11 @@
 <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+        return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
         if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
             try {
                 var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
@@ -19,11 +19,11 @@
 
                 // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
                 var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
                 // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
+                    headerRowIndex = 0;
                 }
 
                 // Convert filtered JSON back to CSV
@@ -36,34 +36,243 @@
             }
         }
         return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+    }
+</script>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduBuddy - Learn Anytime, Even Offline</title>
+    <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- For icons -->
     <style>
-        body { background-color: #f8f9fa; }
-        .splash-screen { 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            background-color: #007bff; 
-            color: white; 
-            transition: opacity 1s; 
+        body {
+            background-color: #add8e6;
+            /* Light blue */
+            font-family: 'Arial', sans-serif;
         }
-        .splash-screen.hidden { opacity: 0; display: none; }
-        .navbar-brand { font-weight: bold; }
-        .subject-card, .quiz-card { cursor: pointer; }
-        .downloaded-tick::after { content: '✓'; color: green; margin-left: 10px; }
-        .offline-warning { display: none; color: red; }
-        .lesson-content { margin-top: 20px; }
+
+        .splash-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #add8e6, #ff4500);
+            /* Light blue to orange */
+            color: white;
+            transition: opacity 1s;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            display: none;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: #800000;
+            /* Maroon */
+            text-shadow: 1px 1px #fff;
+        }
+
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .subject-card {
+            background: linear-gradient(135deg, #add8e6, #ff4500, #800000);
+            /* Light blue to orange to maroon */
+            border: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .quiz-card {
+            background: linear-gradient(135deg, #ff4500, #800000, #add8e6);
+            /* Orange to maroon to light blue */
+            border: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .download-card {
+            background: linear-gradient(135deg, #800000, #add8e6, #ff4500);
+            /* Maroon to light blue to orange */
+            border: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .update-card {
+            background: linear-gradient(135deg, #ff4500, #add8e6, #800000);
+            /* Orange to light blue to maroon */
+            border: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .subject-card:hover,
+        .quiz-card:hover,
+        .download-card:hover,
+        .update-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-body {
+            color: #fff;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .downloaded-tick::after {
+            content: '✓';
+            color: #28a745;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .offline-warning {
+            display: none;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .lesson-content {
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #dashboard {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50IiB4MT0iMCIgeDI9IjEiIHkxPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3R5bGU9InN0b3AtY29sb3I6I2FkZDhlNjsiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjQ1MDA7Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3R5bGU9InN0b3AtY29sb3I6IzgwMDAwMDsiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+CiAgPGNpcmNsZSBjeD0iMjAwIiBjeT0iMjAwIiByPSI1MCIgZmlsbD0iI2ZmNDUwMCIvPgogIDxyZWN0IHg9IjMwMCIgeT0iMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwMDAwMCIgc3R5bGU9Im9wYWNpdHk6MC4xOyIvPgogIDxwb2x5Z29uIHBvaW50cz0iNTAwLDIwMCA1NTAsMjUwIDYwMCwyMDAgNTUwLDE1MCIgZmlsbD0iI2FkZDhlNiIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iNTAiIGZvbnQtc2l6ZT0iNDBweCIgZmlsbD0iI2ZmZmZmZiI+U3R1ZHkgSGVyZSE8L3RleHQ+CiAgPHRleHQgeD0iMTAwIiB5PSI5MCIgZm9udC1zaXplPSIxOHB4IiBmaWxsPSIjZmZmZmZmIj5MZWFybiBBbnl0aW1lPC90ZXh0PgogIDxjaXJjbGUgY3g9IjEyMDAiIGN5PSIyMDAiIHI9IjUwIiBmaWxsPSIjODAwMDAwIi8+CiAgPHBvbHlsaW5lIHBvaW50cz0iMTQwMCwyNTAgMTUwMCwzMDAgMTYwMCwyNTUiIHN0eWxlPSJzdHJva2U6I2ZmNDUwMDtzdHJva2Utd2lkdGg6MztmaWxsOm5vbmUiLz4KPC9zdmc+');
+            background-size: cover;
+            background-position: center;
+            padding: 50px 0;
+            border-radius: 10px;
+            position: relative;
+            min-height: 500px;
+            /* Ensure minimum height to display background */
+        }
+
+        #dashboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            /* Overlay to improve text readability */
+            border-radius: 10px;
+            z-index: 0;
+        }
+
+        #dashboard .card {
+            position: relative;
+            z-index: 1;
+            border: none;
+            transition: transform 0.3s;
+        }
+
+        #dashboard .card:hover {
+            transform: scale(1.03);
+        }
+
+        #dashboard .card-body {
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #dashboard h2 {
+            color: #ff4500;
+            /* Orange */
+            text-align: center;
+            animation: fadeIn 2s;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .instruction-text {
+            font-size: 0.9em;
+            color: #fff;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .btn-primary {
+            background-color: #800000;
+            /* Maroon */
+            border-color: #800000;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #a52a2a;
+            border-color: #a52a2a;
+        }
+
+        .btn-outline-primary {
+            color: #ff4500;
+            /* Orange */
+            border-color: #ff4500;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #ff4500;
+            color: #fff;
+        }
+
+        .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        #lessonBody {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #333;
+            /* Dark gray for better readability */
+            /* white-space: pre-wrap; */
+            /* Preserve line breaks and spacing */
+        }
     </style>
 </head>
+
 <body>
     <!-- Splash Screen -->
     <div id="splashScreen" class="splash-screen">
@@ -75,15 +284,15 @@
     <div id="authSection" class="container mt-5 d-none">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card">
+                <div class="card" style="background: linear-gradient(135deg, #add8e6, #ff4500);">
                     <div class="card-body">
-                        <h3 class="card-title text-center">Login / Register</h3>
+                        <h3 class="card-title text-center" style="color: #fff;">Login / Register</h3>
                         <div class="mb-3">
-                            <label for="username" class="form-label">Username/Email</label>
+                            <label for="username" class="form-label text-white">Username/Email</label>
                             <input type="text" class="form-control" id="username" placeholder="Enter username or email">
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
+                            <label for="password" class="form-label text-white">Password</label>
                             <input type="password" class="form-control" id="password" placeholder="Enter password">
                         </div>
                         <button class="btn btn-primary w-100" onclick="login()">Login</button>
@@ -97,7 +306,7 @@
     <!-- Main App (Hidden until login) -->
     <div id="mainApp" class="d-none">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">EduBuddy</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -105,11 +314,16 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav">
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('dashboard')">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('subjects')">Subjects</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('quizzes')">Quizzes</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('downloads')">Downloads</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('profile')">Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('dashboard')"
+                                style="color: #800000;">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('subjects')"
+                                style="color: #ff4500;">Subjects</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('quizzes')"
+                                style="color: #add8e6;">Quizzes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('downloads')"
+                                style="color: #800000;">Downloads</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('profile')"
+                                style="color: #ff4500;">Profile</a></li>
                     </ul>
                 </div>
             </div>
@@ -117,35 +331,80 @@
 
         <!-- Dashboard -->
         <div id="dashboard" class="container mt-4">
-            <h2>Dashboard</h2>
+            <h2>Dashboard - Your Learning Adventure Begins!</h2>
             <div class="row">
-                <div class="col-md-3"><div class="card subject-card" onclick="showSection('subjects')"><div class="card-body">Subjects</div></div></div>
-                <div class="col-md-3"><div class="card quiz-card" onclick="showSection('quizzes')"><div class="card-body">Quizzes</div></div></div>
-                <div class="col-md-3"><div class="card" onclick="showSection('downloads')"><div class="card-body">Downloads</div></div></div>
-                <div class="col-md-3"><div class="card"><div class="card-body"><button class="btn btn-primary" onclick="checkUpdates()">Check for Updates</button><p class="offline-warning">You are offline!</p></div></div></div>
+                <div class="col-md-3">
+                    <div class="card subject-card" onclick="showSection('subjects')">
+                        <div class="card-body">
+                            <i class="fas fa-book icon"></i>
+                            Subjects
+                            <p class="instruction-text">Dive into exciting subjects like Biology & Geography! Explore,
+                                learn, and conquer new topics. Start now!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card quiz-card" onclick="showSection('quizzes')">
+                        <div class="card-body">
+                            <i class="fas fa-brain icon"></i>
+                            Quizzes
+                            <p class="instruction-text">Test your skills with fun quizzes! Test your knowledge and climb
+                                the leaderboard. Ready for the challenge?</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card download-card" onclick="showSection('downloads')">
+                        <div class="card-body">
+                            <i class="fas fa-download icon"></i>
+                            Downloads
+                            <p class="instruction-text">Save your favorite lessons offline! Build your knowledge bank
+                                and learn anywhere. Download today!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card update-card">
+                        <div class="card-body">
+                            <i class="fas fa-sync-alt icon"></i>
+                            <button class="btn btn-primary" onclick="checkUpdates()">Check for Updates</button>
+                            <p class="instruction-text">Stay ahead! Check for the latest content and updates to boost
+                                your learning. Click now!</p>
+                            <p class="offline-warning">You are offline!</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Subjects -->
         <div id="subjects" class="container mt-4 d-none">
-            <h2>Subjects</h2>
+            <h2 style="color: #ff4500;">Subjects - Unlock Your Potential!</h2>
             <div class="row">
                 <div class="col-md-6">
-                    <h4>Biology</h4>
+                    <h4 style="color: #800000;">Biology</h4>
                     <ul class="list-group">
-                        <li class="list-group-item" id="genetics" onclick="viewLesson('Genetics')">Genetics <button class="btn btn-sm btn-outline-primary float-end" onclick="event.stopPropagation(); downloadLesson('Genetics')">Download</button></li>
+                        <li class="list-group-item" id="genetics" onclick="viewLesson('Genetics')"
+                            style="background: linear-gradient(135deg, #add8e6, #ff4500); color: #fff;">
+                            Genetics <button class="btn btn-sm btn-outline-primary float-end"
+                                onclick="event.stopPropagation(); downloadLesson('Genetics')">Download</button>
+                        </li>
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <h4>Geography</h4>
+                    <h4 style="color: #800000;">Geography</h4>
                     <ul class="list-group">
-                        <li class="list-group-item" id="rainFormation" onclick="viewLesson('RainFormation')">Rain Formation <button class="btn btn-sm btn-outline-primary float-end" onclick="event.stopPropagation(); downloadLesson('RainFormation')">Download</button></li>
+                        <li class="list-group-item" id="rainFormation" onclick="viewLesson('RainFormation')"
+                            style="background: linear-gradient(135deg, #add8e6, #ff4500); color: #fff;">
+                            Rain Formation <button class="btn btn-sm btn-outline-primary float-end"
+                                onclick="event.stopPropagation(); downloadLesson('RainFormation')">Download</button>
+                        </li>
                     </ul>
                 </div>
             </div>
             <div id="lessonContent" class="lesson-content card mt-4 d-none">
                 <div class="card-body">
-                    <h3 id="lessonTitle"></h3>
+                    <h3 id="lessonTitle" style="color: #800000;"></h3>
                     <div id="lessonBody"></div>
                 </div>
             </div>
@@ -153,23 +412,27 @@
 
         <!-- Quizzes -->
         <div id="quizzes" class="container mt-4 d-none">
-            <h2>Quizzes</h2>
+            <h2 style="color: #add8e6;">Quizzes - Prove Your Skills!</h2>
             <div class="row">
                 <div class="col-md-6">
-                    <h4>Biology</h4>
+                    <h4 style="color: #ff4500;">Biology</h4>
                     <ul class="list-group">
-                        <li class="list-group-item" onclick="startQuiz('Biology')">Genetics Quiz</li>
+                        <li class="list-group-item" onclick="startQuiz('Biology')"
+                            style="background: linear-gradient(135deg, #ff4500, #800000); color: #fff;">Genetics Quiz
+                        </li>
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <h4>Geography</h4>
+                    <h4 style="color: #ff4500;">Geography</h4>
                     <ul class="list-group">
-                        <li class="list-group-item" onclick="startQuiz('Geography')">Rain Formation Quiz</li>
+                        <li class="list-group-item" onclick="startQuiz('Geography')"
+                            style="background: linear-gradient(135deg, #ff4500, #800000); color: #fff;">Rain Formation
+                            Quiz</li>
                     </ul>
                 </div>
             </div>
             <div id="quizSection" class="mt-4 d-none">
-                <h3 id="quizTitle"></h3>
+                <h3 id="quizTitle" style="color: #800000;"></h3>
                 <div id="quizQuestions"></div>
                 <button class="btn btn-primary mt-3" onclick="submitQuiz()">Submit</button>
                 <div id="quizFeedback" class="mt-3"></div>
@@ -178,19 +441,19 @@
 
         <!-- Downloads -->
         <div id="downloads" class="container mt-4 d-none">
-            <h2>Downloads</h2>
+            <h2 style="color: #800000;">Downloads - Your Learning Toolkit!</h2>
             <ul id="downloadList" class="list-group"></ul>
         </div>
 
         <!-- Profile -->
         <div id="profile" class="container mt-4 d-none">
-            <h2>Profile & Settings</h2>
-            <div class="card">
+            <h2 style="color: #ff4500;">Profile & Settings - Your Journey!</h2>
+            <div class="card" style="background: linear-gradient(135deg, #add8e6, #800000);">
                 <div class="card-body">
-                    <h5>User Info</h5>
-                    <p>Name: <span id="userName"></span></p>
-                    <p>Grade/Class: <span id="userGrade"></span></p>
-                    <h5>Storage Management</h5>
+                    <h5 style="color: #fff;">User Info</h5>
+                    <p>Name: <span id="userName" style="color: #fff;"></span></p>
+                    <p>Grade/Class: <span id="userGrade" style="color: #fff;"></span></p>
+                    <h5 style="color: #fff;">Storage Management</h5>
                     <button class="btn btn-danger" onclick="clearDownloads()">Clear All Downloads</button>
                     <button class="btn btn-secondary mt-2" onclick="logout()">Logout</button>
                 </div>
@@ -199,6 +462,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
     <script>
         // Base URL for backend API (adjust if needed)
         const API_BASE = 'http://localhost:3000/api';
@@ -222,6 +486,16 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             if (username && password) {
+                if (isOffline) {
+                    const storedUser = JSON.parse(localStorage.getItem('userData')) || {};
+                    if (storedUser.username === username && storedUser.password === password) {
+                        showMainApp();
+                        return;
+                    } else {
+                        alert('Offline login failed. Invalid credentials.');
+                        return;
+                    }
+                }
                 try {
                     const response = await fetch(`${API_BASE}/login`, {
                         method: 'POST',
@@ -230,7 +504,7 @@
                     });
                     const data = await response.json();
                     if (data.success) {
-                        userData = { id: data.userId, username, grade: data.grade };
+                        userData = { id: data.userId, username, grade: data.grade, password };
                         localStorage.setItem('userData', JSON.stringify(userData));
                         showMainApp();
                     } else {
@@ -249,11 +523,15 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             if (username && password) {
+                if (isOffline) {
+                    alert('Cannot register while offline.');
+                    return;
+                }
                 try {
                     const response = await fetch(`${API_BASE}/register`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password, grade: 'Grade 10' }) // Mock grade
+                        body: JSON.stringify({ username, password, grade: 'Grade 10' })
                     });
                     const data = await response.json();
                     if (data.success) {
@@ -317,9 +595,10 @@
                 alert("Please download the lesson first.");
                 return;
             }
+            console.log('Rendering lesson content:', lessons[topic]); // Debugging log
             document.getElementById('lessonContent').classList.remove('d-none');
             document.getElementById('lessonTitle').textContent = topic;
-            document.getElementById('lessonBody').innerHTML = lessons[topic];
+            document.getElementById('lessonBody').innerHTML = lessons[topic].replace(/\n/g, '<br>'); // Replace \n with <br>
         }
 
         function checkDownloadedLessons() {
@@ -337,6 +616,8 @@
             downloads.forEach(item => {
                 const li = document.createElement('li');
                 li.classList.add('list-group-item');
+                li.style.background = 'linear-gradient(135deg, #800000, #add8e6)';
+                li.style.color = '#fff';
                 li.textContent = `${item} (PDF)`;
                 li.onclick = () => viewLesson(item);
                 downloadList.appendChild(li);
@@ -436,12 +717,10 @@
                 try {
                     const response = await fetch(`${API_BASE}/sync?userId=${userData.id}`);
                     const data = await response.json();
-                    // Update localStorage with new/updated lessons and quizzes
                     Object.assign(lessons, data.lessons);
                     Object.assign(quizzesData, data.quizzes);
                     localStorage.setItem('lessons', JSON.stringify(lessons));
                     localStorage.setItem('quizzes', JSON.stringify(quizzesData));
-                    // Update downloads if needed
                     downloads = data.downloads;
                     localStorage.setItem('downloads', JSON.stringify(downloads));
                     checkDownloadedLessons();
@@ -463,7 +742,6 @@
         window.addEventListener('online', () => {
             isOffline = false;
             document.querySelector('.offline-warning').style.display = 'none';
-            // Optional: Auto-sync when back online
             if (userData.id) checkUpdates();
         });
         window.addEventListener('offline', () => {
@@ -472,4 +750,5 @@
         });
     </script>
 </body>
+
 </html>

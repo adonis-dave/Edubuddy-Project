@@ -1,0 +1,6 @@
+#topicContent h4,
+#topicContent p,
+#topicContent ul,
+#topicContent table {
+    display: block !important;
+}

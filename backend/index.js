@@ -1,5 +1,6 @@
 // server.js - Node.js with Express backend for EduBuddy
 
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
@@ -13,10 +14,10 @@ app.use(bodyParser.json());
 
 // MySQL Connection
 const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "mi vida",
+    database: process.env.DB_NAME || "edubuddy"
 });
 
 db.connect(err => {
@@ -108,7 +109,20 @@ app.get('/api/quizzes/:subject', (req, res) => {
                 if (err) {
                     return res.json({ questions: [] });
                 }
-                res.json({ questions: questions.map(q => ({ ...q, options: JSON.parse(q.options) })) });
+                res.json({
+                    questions: questions.map(q => ({
+                        ...q,
+                        options: (() => {
+                            try {
+                                return JSON.parse(q.options); // Attempt to parse as JSON
+                            } catch {
+                                return typeof q.options === 'string'
+                                    ? q.options.split(',') // Fallback: split by commas if it's a string
+                                    : []; // Default to an empty array if it's not a string
+                            }
+                        })()
+                    }))
+                });
             });
         });
     });
@@ -117,7 +131,6 @@ app.get('/api/quizzes/:subject', (req, res) => {
 // Save Quiz Result
 app.post('/api/quiz-results', (req, res) => {
     const { userId, quizTitle, score, total } = req.body;
-    // For simplicity, assuming a user_quiz_results table (add it to schema if needed)
     const query = 'INSERT INTO user_quiz_results (user_id, quiz_title, score, total_questions) VALUES (?, ?, ?, ?)';
     db.query(query, [userId, quizTitle, score, total], (err) => {
         if (err) {
@@ -130,7 +143,6 @@ app.post('/api/quiz-results', (req, res) => {
 // Sync Data
 app.get('/api/sync', (req, res) => {
     const { userId } = req.query;
-    // Fetch user's downloads
     const queryDownloads = `
         SELECT t.name 
         FROM user_downloads ud 
@@ -143,7 +155,6 @@ app.get('/api/sync', (req, res) => {
         }
         const userDownloads = downloadResults.map(row => row.name);
 
-        // Fetch all lessons
         const queryLessons = 'SELECT name, content FROM topics';
         db.query(queryLessons, (err, lessonResults) => {
             if (err) {
@@ -156,7 +167,6 @@ app.get('/api/sync', (req, res) => {
                 }
             });
 
-            // Fetch all quizzes (simplified for Biology and Geography)
             const queryQuizzes = `
                 SELECT s.name AS subject, qq.question, qq.options, qq.correct_answer AS answer
                 FROM subjects s
@@ -172,7 +182,15 @@ app.get('/api/sync', (req, res) => {
                     if (!quizzesObj[row.subject]) quizzesObj[row.subject] = [];
                     quizzesObj[row.subject].push({
                         question: row.question,
-                        options: JSON.parse(row.options),
+                        options: (() => {
+                            try {
+                                return JSON.parse(row.options);
+                            } catch {
+                                return typeof row.options === 'string'
+                                    ? row.options.split(',')
+                                    : [];
+                            }
+                        })(),
                         answer: row.answer
                     });
                 });
